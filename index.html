@@ -13,6 +13,7 @@
             --header-text-stroke: #FF8C00; /* 字體邊框感 */
             --btn-bg: #FFA500;
             --btn-clear-bg: #FF6B6B; /* 清除按鈕顏色 */
+            --btn-preview-bg: #90EE90; /* 預覽按鈕顏色：淡綠色 */
         }
 
         body {
@@ -35,7 +36,7 @@
             width: 100%;
             height: 100%;
             background-image: url('./image/DS-BK.jpg');
-            //background-color:FFB800; 
+            /* background-color:FFB800; 修正為正確的 CSS 註解 */
             background-size: cover;
             background-position: center top;
             opacity: 1.75;
@@ -66,6 +67,7 @@
             width: 100%;
             max-width: 1000px;
             position: relative;
+            padding-bottom: 50px; /* 預留底部空間 */
         }
 
         /* 4. 版本資訊樣式 */
@@ -91,6 +93,11 @@
         .controls-left {
             display: flex;
             align-items: flex-end;
+            gap: 10px;
+        }
+
+        .controls-right {
+            display: flex;
             gap: 10px;
         }
 
@@ -142,6 +149,11 @@
             font-size: 1rem; /* 稍微小一點 */
             padding: 5px 10px;
             height: 40px; /* 與選單高度對齊 */
+        }
+
+        /* 新增：預覽按鈕樣式 */
+        .preview-btn {
+            background-color: var(--btn-preview-bg);
         }
 
         /* 主要表格區域 */
@@ -209,8 +221,6 @@
         input[list] {
             cursor: text;
         }
-        /* 移除 Webkit 瀏覽器預設的下拉箭頭背景，因為我們可以用滑鼠點擊輸入框兩次或打字 */
-        /* 但保留 datalist 原生行為 */
 
         select {
             text-align: center;
@@ -222,9 +232,17 @@
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid var(--border-color);
             padding: 10px;
+            margin-bottom: 20px;
         }
         
-        .notes-label {
+        /* 新增：預覽內容區塊 */
+        .preview-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--border-color);
+            padding: 10px;
+        }
+
+        .section-label {
             font-size: 1.2rem;
             font-weight: bold;
             display: block;
@@ -232,12 +250,17 @@
             color: #333;
         }
 
-        .notes-area {
+        .notes-area, .preview-area {
             width: 100%;
             height: 100px;
             resize: vertical;
             padding: 5px;
             font-family: inherit;
+        }
+        
+        .preview-area {
+            background-color: #f9f9f9;
+            color: #333;
         }
 
         @media (max-width: 768px) {
@@ -250,8 +273,13 @@
                 width: 100%;
                 justify-content: space-between;
             }
-            .copy-btn {
+            .controls-right {
                 width: 100%;
+                display: flex;
+                gap: 10px;
+            }
+            .copy-btn, .preview-btn {
+                flex: 1;
             }
             thead th {
                 font-size: 1.2rem;
@@ -298,7 +326,7 @@
 
     <div class="container">
         <!-- 4. 版本資訊 -->
-        <div class="version-info">Ver 1.3</div>
+        <div class="version-info">Ver 1.4</div>
 
         <!-- 上方控制區 -->
         <div class="top-controls">
@@ -315,7 +343,11 @@
                 <button class="btn clear-btn" onclick="clearTable()">清除內容</button>
             </div>
             
-            <button class="btn copy-btn" onclick="copyContent()">複製內容</button>
+            <div class="controls-right">
+                <!-- 新增：預覽按鈕 -->
+                <button class="btn preview-btn" onclick="previewContent()">預覽內容</button>
+                <button class="btn copy-btn" onclick="copyContent()">複製內容</button>
+            </div>
         </div>
 
         <!-- 主表格區 -->
@@ -336,8 +368,14 @@
         </div>
 
         <div class="notes-section">
-            <label class="notes-label">注意事項：</label>
+            <label class="section-label">注意事項：</label>
             <textarea id="notesArea" class="notes-area" placeholder="請在此輸入注意事項..."></textarea>
+        </div>
+
+        <!-- 新增：預覽內容顯示區 -->
+        <div class="preview-section">
+            <label class="section-label">預覽內容：</label>
+            <textarea id="previewArea" class="preview-area" readonly placeholder="點擊上方「預覽內容」按鈕，結果將顯示於此..."></textarea>
         </div>
     </div>
 
@@ -467,15 +505,6 @@
                 inputRemark.setAttribute('list', 'remarkList');
                 inputRemark.placeholder = "輸入或選取";
                 
-                /* if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
-                    inputRemark.value = "";
-                }
-                 if (deity.includes("皇母") || deity.includes("無極五母")) {
-                    inputRemark.value = "";
-                }
-                if (deity.includes("八大菩薩")) {
-                    inputRemark.value = "";
-                } */
                 tdRemark.appendChild(inputRemark);
                 tr.appendChild(tdRemark);
 
@@ -508,46 +537,66 @@
             });
         }
 
-        // 清除內容功能
+        // 修正後的清除內容功能
         function clearTable() {
-            if(!confirm("確定要清除表格內所有輸入的內容嗎？")) return;
-
-            const inputs = document.querySelectorAll('#rosterBody input');
-            inputs.forEach(input => {
-                // 不清除預設的備註邏輯? 題目說清除內容，通常指重置。
-                // 這裡選擇全部清空成空白，還是重置回預設值(如理慧傳香)？
-                // 根據按鈕字面意思「清除內容」，我將其清空。若要重置，只需重呼叫 initTable()。
-                // 這裡我使用「重置回初始狀態」邏輯 (即重新執行 initTable)，這樣預設備註會回來，比較貼心。
-                // 如果您希望完全空白，可以把下面改成 input.value = '';
-            });
+            if(!confirm("確定要清除表格內所有輸入的內容、注意事項及預覽嗎？")) return;
             
-            // 重置表格 (會恢復預設備註) 及注意事項
+            // 1. 重置表格 (Reset Table - 這會清空並重建輸入框)
             initTable();
-            document.getElementById('notesArea').value = '';
+            
+            // 2. 清除注意事項 (Clear Notes)
+            var notes = document.getElementById('notesArea');
+            if(notes) notes.value = '';
+            
+            // 3. 清除預覽 (Clear Preview)
+            var preview = document.getElementById('previewArea');
+            if(preview) preview.value = '';
         }
 
-        function copyContent() {
+        // 產生結果文字的共用函式
+        function generateResultText() {
             const location = document.getElementById('locationSelect').value;
             const notes = document.getElementById('notesArea').value;
 
             let resultText = `法會地點：${location}\n\n`;
-            resultText += `位置/神佛 | 指派 | 香 | 備註\n`;
+            resultText += `位置/神佛 | 指派 | 炷香 | 備註\n`;
             resultText += `-----------------------------------\n`;
 
             const rows = document.querySelectorAll('#rosterBody tr');
             
             rows.forEach(row => {
                 const name = row.querySelector('.deity-name').textContent;
-                const person = row.querySelector('.person-input').value; // 改抓 input
-                const incense = row.querySelector('.incense-input').value; // 改抓 input
+                const person = row.querySelector('.person-input').value; 
+                const incense = row.querySelector('.incense-input').value;
                 const remark = row.querySelector('.remark-input').value;
 
+                // 簡單格式化
                 resultText += `${name} | ${person} | ${incense} | ${remark}\n`;
             });
 
             if (notes.trim() !== "") {
                 resultText += `\n[注意事項]\n${notes}\n`;
             }
+
+            return resultText;
+        }
+
+        // 預覽功能
+        function previewContent() {
+            const resultText = generateResultText();
+            const previewArea = document.getElementById('previewArea');
+            previewArea.value = resultText;
+            
+            // 自動捲動到預覽區塊，讓使用者看到結果
+            previewArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 複製功能
+        function copyContent() {
+            const resultText = generateResultText();
+            
+            // 同步更新到預覽區，讓使用者知道複製了什麼
+            document.getElementById('previewArea').value = resultText;
 
             const textArea = document.createElement("textarea");
             textArea.value = resultText;
@@ -559,14 +608,14 @@
                 if (successful) {
                     showToast();
                 } else {
-                    alert('複製失敗，請手動複製。');
+                    alert('複製失敗，請手動複製預覽區的內容。');
                 }
             } catch (err) {
                 console.error('複製失敗', err);
                 navigator.clipboard.writeText(resultText).then(() => {
                     showToast();
                 }).catch(err => {
-                    alert('瀏覽器不支援自動複製，請手動截圖或複製。');
+                    alert('瀏覽器不支援自動複製，請手動複製預覽區的內容。');
                 });
             }
             
@@ -583,4 +632,3 @@
     </script>
 </body>
 </html>
-
