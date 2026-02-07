@@ -34,8 +34,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /*background-image: url('\image\DS-BK.jpg'); */
-            background-color:FFB800; 
+            background-image: url('\image\DS-BK.jpg');
+            //background-color:FFB800; 
             background-size: cover;
             background-position: center top;
             opacity: 1.75;
@@ -174,7 +174,7 @@
         .header-pos-deity { width: 40%; }
         .header-assign { width: 15%; }
         .header-incense { width: 15%; }
-        .header-note { width: 30%; }
+        .header-note { width: 15%; }
 
         tbody tr {
             height: 40px;
@@ -325,7 +325,7 @@
                     <tr>
                         <th class="header-pos-deity">位置 &nbsp;&nbsp;&nbsp; 神佛</th>
                         <th class="header-assign">指派</th>
-                        <th class="header-incense">香</th>
+                        <th class="header-incense">炷香</th>
                         <th class="header-note">備註</th>
                     </tr>
                 </thead>
@@ -455,7 +455,7 @@
                 inputIncense.type = 'text';
                 inputIncense.className = 'incense-input';
                 inputIncense.setAttribute('list', 'incenseList'); // 連結到靜態 datalist
-                inputIncense.placeholder = "";
+                inputIncense.placeholder = "輸入或選取";
                 tdIncense.appendChild(inputIncense);
                 tr.appendChild(tdIncense);
 
@@ -464,18 +464,18 @@
                 const inputRemark = document.createElement('input');
                 inputRemark.type = 'text';
                 inputRemark.className = 'remark-input';
-                inputRemark.setAttribute('list', 'remarkOptions');
+                inputRemark.setAttribute('list', 'incenseList');
+                inputRemark.placeholder = "輸入或選取";
                 
-                if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
-                    inputRemark.value = "理慧通知傳香";
+                /* if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
+                    inputRemark.value = "";
                 }
                  if (deity.includes("皇母") || deity.includes("無極五母")) {
-                    inputRemark.value = "敬合傳香";
+                    inputRemark.value = "";
                 }
                 if (deity.includes("八大菩薩")) {
-                    inputRemark.value = "信永傳香";
-                }
-
+                    inputRemark.value = "";
+                } */
                 tdRemark.appendChild(inputRemark);
                 tr.appendChild(tdRemark);
 
