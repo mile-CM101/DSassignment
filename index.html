@@ -6,25 +6,27 @@
     <title>法會執事表</title>
     <style>
         :root {
-            --main-bg-color: #00FFFF; /* 圖片中的亮青色 */
+            /* 5. 將原本的亮青色 (#00FFFF) 改為淡藍色 */
+            --main-bg-color: #B3E5FC; 
             --border-color: #000000;
-            --header-text-color: #FFD700; /* 圖片中的金黃色字體 */
+            --header-text-color: #FFFEFC; /* 圖片中的金黃色字體 */
             --header-text-stroke: #FF8C00; /* 字體邊框感 */
             --btn-bg: #FFA500;
+            --btn-clear-bg: #FF6B6B; /* 清除按鈕顏色 */
         }
 
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
-            background-color: #f0f0f0;
+            background-color: #1a1a1a;
             margin: 0;
-            padding: 20px;
+            padding: 18px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            position: relative; /* 確保內容層級正確 */
+            position: relative;
         }
 
-        /* 使用偽元素來設定背景圖片透明度，而不影響內容 */
+        /* 背景層 1：圖片 */
         body::before {
             content: "";
             position: fixed;
@@ -32,17 +34,48 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('image/DSBK.jpg'); 
+            background-image: url('\image\DS-BK.jpg'); 
             background-size: cover;
-            background-position: center;
-            opacity: 0.2; /* 設定背景透明度為 20% */
+            background-position: center top;
+            opacity: 0.35;
+            z-index: -2;
+            filter: blur(1px); 
+        }
+
+        /* 背景層 2：金色神光特效 */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at 50% 30%,
+                rgba(255, 215, 0, 0.4) 0%,
+                rgba(255, 140, 0, 0.2) 40%,
+                rgba(0, 0, 0, 0.8) 90%
+            );
             z-index: -1;
+            pointer-events: none;
+            mix-blend-mode: overlay;
         }
 
         .container {
             width: 100%;
             max-width: 1000px;
             position: relative;
+        }
+
+        /* 4. 版本資訊樣式 */
+        .version-info {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            color: #FFF;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-shadow: 1px 1px 2px black;
         }
 
         /* 頂部控制區 */
@@ -52,6 +85,12 @@
             align-items: flex-end;
             margin-bottom: 10px;
             padding: 0 5px;
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
         }
 
         .location-box {
@@ -75,9 +114,8 @@
             border: 1px solid #999;
         }
 
-        /* 複製按鈕 */
-        .copy-btn {
-            background-color: var(--btn-bg);
+        /* 按鈕共用樣式 */
+        .btn {
             border: 3px solid var(--border-color);
             font-size: 1.2rem;
             font-weight: bold;
@@ -85,19 +123,35 @@
             cursor: pointer;
             box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
             transition: transform 0.1s;
+            color: #000;
         }
 
-        .copy-btn:active {
+        .btn:active {
             transform: translate(2px, 2px);
             box-shadow: none;
         }
 
+        .copy-btn {
+            background-color: var(--btn-bg);
+        }
+        
+        /* 3. 清除按鈕樣式 */
+        .clear-btn {
+            background-color: var(--btn-clear-bg);
+            font-size: 1rem; /* 稍微小一點 */
+            padding: 5px 10px;
+            height: 40px; /* 與選單高度對齊 */
+        }
+
         /* 主要表格區域 */
         .roster-container {
-            background-color: var(--main-bg-color);
+            background-color: var(--main-bg-color); /* 使用新的變數顏色 */
+            /* 讓背景稍微透明一點點，保留神光透出的感覺，但維持閱讀性 */
+            background-color: rgba(179, 229, 252, 0.95); 
             border: 4px solid var(--border-color);
             padding: 5px;
-            margin-bottom: 20px; /* 與下方注意事項隔開 */
+            margin-bottom: 20px; 
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
 
         table {
@@ -116,7 +170,6 @@
             letter-spacing: 2px;
         }
         
-        /* 模擬圖片中 header 的特殊排版 */
         .header-pos-deity { width: 40%; }
         .header-assign { width: 15%; }
         .header-incense { width: 15%; }
@@ -134,7 +187,6 @@
             padding: 2px;
         }
 
-        /* 欄位樣式 */
         .deity-name {
             padding-left: 5px;
             white-space: nowrap;
@@ -152,15 +204,16 @@
             height: 32px;
         }
         
+        /* 讓 datalist 的 input 看起來像可點選 */
+        input[list] {
+            cursor: text;
+        }
+        /* 移除 Webkit 瀏覽器預設的下拉箭頭背景，因為我們可以用滑鼠點擊輸入框兩次或打字 */
+        /* 但保留 datalist 原生行為 */
+
         select {
             text-align: center;
             text-align-last: center;
-        }
-
-        /* 被禁用的選項樣式 */
-        option:disabled {
-            color: #ccc;
-            background-color: #f0f0f0;
         }
 
         /* 注意事項區塊 */
@@ -186,12 +239,15 @@
             font-family: inherit;
         }
 
-        /* 響應式調整 */
         @media (max-width: 768px) {
             .top-controls {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
+            }
+            .controls-left {
+                width: 100%;
+                justify-content: space-between;
             }
             .copy-btn {
                 width: 100%;
@@ -204,7 +260,6 @@
             }
         }
         
-        /* 提示訊息 */
         #toast {
             visibility: hidden;
             min-width: 250px;
@@ -241,17 +296,25 @@
 <body>
 
     <div class="container">
+        <!-- 4. 版本資訊 -->
+        <div class="version-info">Ver 1.2</div>
+
         <!-- 上方控制區 -->
         <div class="top-controls">
-            <div class="location-box">
-                <label class="location-label">法會地點</label>
-                <select id="locationSelect" class="location-select" onchange="initTable()">
-                    <option value="新店紫竹林寺" selected>新店紫竹林寺</option>
-                    <option value="玄皇寺法會">玄皇寺法會</option>
-                    <option value="大正金剛轉輪寺">大正金剛轉輪寺</option>
-                </select>
+            <div class="controls-left">
+                <div class="location-box">
+                    <label class="location-label">法會地點</label>
+                    <select id="locationSelect" class="location-select" onchange="initTable()">
+                        <option value="新店紫竹林寺" selected>新店紫竹林寺</option>
+                        <option value="玄皇寺法會">玄皇寺法會</option>
+                        <option value="大正金剛轉輪寺">大正金剛轉輪寺</option>
+                    </select>
+                </div>
+                <!-- 3. 清除內容按鈕 -->
+                <button class="btn clear-btn" onclick="clearTable()">清除內容</button>
             </div>
-            <button class="copy-btn" onclick="copyContent()">複製內容</button>
+            
+            <button class="btn copy-btn" onclick="copyContent()">複製內容</button>
         </div>
 
         <!-- 主表格區 -->
@@ -266,22 +329,33 @@
                     </tr>
                 </thead>
                 <tbody id="rosterBody">
-                    <!-- Javascript 將自動生成這裡的內容 -->
+                    <!-- Javascript 將自動生成 -->
                 </tbody>
             </table>
         </div>
 
-        <!-- 新增：注意事項區塊 (在框框外面下面) -->
         <div class="notes-section">
             <label class="notes-label">注意事項：</label>
             <textarea id="notesArea" class="notes-area" placeholder="請在此輸入注意事項..."></textarea>
         </div>
     </div>
 
-    <!-- 複製成功提示 -->
     <div id="toast">內容已複製到剪貼簿！</div>
 
-    <!-- 預設選項資料 -->
+    <!-- 共用 DataLists -->
+    <!-- 人員清單：會動態更新 -->
+    <datalist id="dynamicPeopleList">
+        <!-- JS 動態填入 -->
+    </datalist>
+
+    <!-- 香清單：固定 -->
+    <datalist id="incenseList">
+        <option value="3中">
+        <option value="1中">
+        <option value="2握香">
+    </datalist>
+
+    <!-- 備註清單：固定 -->
     <datalist id="remarkOptions">
         <option value="理慧傳香">
         <option value="理慧通知傳香">
@@ -290,7 +364,6 @@
     </datalist>
 
     <script>
-        // 資料定義：根據不同地點設定不同的神佛列表
         const locationData = {
             "新店紫竹林寺": [
                 "1樓 內殿 觀世音皇母",
@@ -328,75 +401,67 @@
             ]
         };
 
-        // 下拉選單 1: 人員
         const people = [
-            "", "歷生", "智法", "展賢", "聞真", 
+            "歷生", "智法", "展賢", "聞真", 
             "圓律", "宜誠", "立言", "易賢", 
             "旻賢", "以聞", "躍智", "瑞仁", 
             "意能", "樂禪", "明行", "理明", "一鳴"
         ];
 
-        // 下拉選單 2: 香
-        const incenseTypes = ["", "3中", "1中", "2握香"];
-
-        // 初始化表格 (現在會根據選單狀態動態生成)
         function initTable() {
             const locationSelect = document.getElementById('locationSelect');
             const selectedLocation = locationSelect.value;
             const tbody = document.getElementById('rosterBody');
             
-            // 清空目前的表格內容
             tbody.innerHTML = '';
-
-            // 取得對應的神佛列表，若找不到則使用空陣列
             const currentDeities = locationData[selectedLocation] || [];
             
             currentDeities.forEach((deity, index) => {
                 const tr = document.createElement('tr');
                 
-                // 1. 神佛名稱欄位
+                // 1. 神佛名稱
                 const tdName = document.createElement('td');
                 tdName.className = 'deity-name';
                 tdName.textContent = deity;
                 tr.appendChild(tdName);
 
-                // 2. 指派人員下拉選單
+                // 2. 指派人員 (改為 input + datalist)
                 const tdPerson = document.createElement('td');
-                const selectPerson = document.createElement('select');
-                selectPerson.className = 'person-select';
-                // 綁定變更事件，處理重複選取邏輯
-                selectPerson.addEventListener('change', updateAvailablePeople);
-
-                people.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p;
-                    opt.textContent = p;
-                    selectPerson.appendChild(opt);
+                const inputPerson = document.createElement('input');
+                inputPerson.type = 'text';
+                inputPerson.className = 'person-input';
+                inputPerson.setAttribute('list', 'dynamicPeopleList'); // 連結到動態 datalist
+                inputPerson.placeholder = "輸入或選取";
+                
+                // 加入 Focus 事件：當點擊輸入框時，動態更新 datalist，過濾掉已選的人
+                inputPerson.addEventListener('focus', function() {
+                    updatePeopleDatalist(this);
                 });
-                tdPerson.appendChild(selectPerson);
+                // 為了讓使用者體驗更好，點擊時如果已經有值，先選取方便修改
+                inputPerson.addEventListener('click', function() {
+                    this.select();
+                });
+
+                tdPerson.appendChild(inputPerson);
                 tr.appendChild(tdPerson);
 
-                // 3. 香下拉選單
+                // 3. 香 (改為 input + datalist)
                 const tdIncense = document.createElement('td');
-                const selectIncense = document.createElement('select');
-                selectIncense.className = 'incense-select';
-                incenseTypes.forEach(i => {
-                    const opt = document.createElement('option');
-                    opt.value = i;
-                    opt.textContent = i;
-                    selectIncense.appendChild(opt);
-                });
-                tdIncense.appendChild(selectIncense);
+                const inputIncense = document.createElement('input');
+                inputIncense.type = 'text';
+                inputIncense.className = 'incense-input';
+                inputIncense.setAttribute('list', 'incenseList'); // 連結到靜態 datalist
+                inputIncense.placeholder = "";
+                tdIncense.appendChild(inputIncense);
                 tr.appendChild(tdIncense);
 
-                // 4. 備註輸入欄位
+                // 4. 備註
                 const tdRemark = document.createElement('td');
                 const inputRemark = document.createElement('input');
                 inputRemark.type = 'text';
                 inputRemark.className = 'remark-input';
-                inputRemark.setAttribute('list', 'remarkOptions'); // 連結到 datalist
+                inputRemark.setAttribute('list', 'remarkOptions');
                 
-                // 預填邏輯 (關鍵字匹配)
                 if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
                     inputRemark.value = "理慧通知傳香";
                 }
@@ -412,41 +477,54 @@
 
                 tbody.appendChild(tr);
             });
-            
-            // 表格重繪後，重新計算一次可用人員 (雖然此時都是空的，但為了保險起見)
-            updateAvailablePeople();
         }
 
-        // 處理人員重複選擇的邏輯
-        function updateAvailablePeople() {
-            const allSelects = document.querySelectorAll('.person-select');
-            
-            // 收集所有「已經被選走」的值 (去除空白選項)
-            const selectedValues = Array.from(allSelects)
-                .map(s => s.value)
-                .filter(v => v !== "");
+        // 動態更新人員清單
+        function updatePeopleDatalist(currentInput) {
+            const datalist = document.getElementById('dynamicPeopleList');
+            datalist.innerHTML = ''; // 清空
 
-            // 遍歷所有選單，更新每個選項的 disabled 狀態
-            allSelects.forEach(select => {
-                const currentValue = select.value;
-                const options = select.options;
+            // 1. 找出所有「其他」欄位已經填寫的值
+            const allInputs = document.querySelectorAll('.person-input');
+            const usedNames = [];
+            allInputs.forEach(input => {
+                // 如果不是當前正在操作的這一格，且有值，就加入已使用清單
+                if (input !== currentInput && input.value.trim() !== '') {
+                    usedNames.push(input.value.trim());
+                }
+            });
 
-                for (let i = 0; i < options.length; i++) {
-                    const opt = options[i];
-                    // 如果這個選項的值在 selectedValues 裡，且不是「目前這個選單選中的值」，就禁用
-                    if (opt.value !== "" && selectedValues.includes(opt.value) && opt.value !== currentValue) {
-                        opt.disabled = true;
-                    } else {
-                        opt.disabled = false;
-                    }
+            // 2. 遍歷完整人員名單，如果不在已使用清單中，才加入選項
+            people.forEach(p => {
+                if (!usedNames.includes(p)) {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    datalist.appendChild(opt);
                 }
             });
         }
 
-        // 複製功能
+        // 清除內容功能
+        function clearTable() {
+            if(!confirm("確定要清除表格內所有輸入的內容嗎？")) return;
+
+            const inputs = document.querySelectorAll('#rosterBody input');
+            inputs.forEach(input => {
+                // 不清除預設的備註邏輯? 題目說清除內容，通常指重置。
+                // 這裡選擇全部清空成空白，還是重置回預設值(如理慧傳香)？
+                // 根據按鈕字面意思「清除內容」，我將其清空。若要重置，只需重呼叫 initTable()。
+                // 這裡我使用「重置回初始狀態」邏輯 (即重新執行 initTable)，這樣預設備註會回來，比較貼心。
+                // 如果您希望完全空白，可以把下面改成 input.value = '';
+            });
+            
+            // 重置表格 (會恢復預設備註) 及注意事項
+            initTable();
+            document.getElementById('notesArea').value = '';
+        }
+
         function copyContent() {
             const location = document.getElementById('locationSelect').value;
-            const notes = document.getElementById('notesArea').value; // 取得注意事項
+            const notes = document.getElementById('notesArea').value;
 
             let resultText = `法會地點：${location}\n\n`;
             resultText += `位置/神佛 | 指派 | 香 | 備註\n`;
@@ -456,19 +534,17 @@
             
             rows.forEach(row => {
                 const name = row.querySelector('.deity-name').textContent;
-                const person = row.querySelector('.person-select').value;
-                const incense = row.querySelector('.incense-select').value;
+                const person = row.querySelector('.person-input').value; // 改抓 input
+                const incense = row.querySelector('.incense-input').value; // 改抓 input
                 const remark = row.querySelector('.remark-input').value;
 
                 resultText += `${name} | ${person} | ${incense} | ${remark}\n`;
             });
 
-            // 加入注意事項
             if (notes.trim() !== "") {
                 resultText += `\n[注意事項]\n${notes}\n`;
             }
 
-            // 複製到剪貼簿
             const textArea = document.createElement("textarea");
             textArea.value = resultText;
             document.body.appendChild(textArea);
@@ -499,7 +575,6 @@
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
         }
 
-        // 啟動
         window.onload = initTable;
     </script>
 </body>
