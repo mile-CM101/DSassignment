@@ -16,16 +16,27 @@
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: #f0f0f0;
-            /* 模擬背景模糊氛圍 */
-            background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url('https://images.unsplash.com/photo-1542042956-655455648839?q=80&w=2000&auto=format&fit=crop'); 
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
+            position: relative; /* 確保內容層級正確 */
+        }
+
+        /* 使用偽元素來設定背景圖片透明度，而不影響內容 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('image/DS-BK.jpg'); 
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2; /* 設定背景透明度為 20% */
+            z-index: -1;
         }
 
         .container {
@@ -86,6 +97,7 @@
             background-color: var(--main-bg-color);
             border: 4px solid var(--border-color);
             padding: 5px;
+            margin-bottom: 20px; /* 與下方注意事項隔開 */
         }
 
         table {
@@ -128,18 +140,50 @@
             white-space: nowrap;
         }
 
-        select, input {
+        select, input, textarea {
             width: 100%;
-            height: 32px;
             font-size: 1rem;
             border: 1px solid #000;
             background-color: white;
-            box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+            box-sizing: border-box;
+        }
+
+        select, input {
+            height: 32px;
         }
         
         select {
             text-align: center;
             text-align-last: center;
+        }
+
+        /* 被禁用的選項樣式 */
+        option:disabled {
+            color: #ccc;
+            background-color: #f0f0f0;
+        }
+
+        /* 注意事項區塊 */
+        .notes-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--border-color);
+            padding: 10px;
+        }
+        
+        .notes-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .notes-area {
+            width: 100%;
+            height: 100px;
+            resize: vertical;
+            padding: 5px;
+            font-family: inherit;
         }
 
         /* 響應式調整 */
@@ -225,6 +269,12 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 新增：注意事項區塊 (在框框外面下面) -->
+        <div class="notes-section">
+            <label class="notes-label">注意事項：</label>
+            <textarea id="notesArea" class="notes-area" placeholder="請在此輸入注意事項..."></textarea>
+        </div>
     </div>
 
     <!-- 複製成功提示 -->
@@ -286,6 +336,9 @@
                 const tdPerson = document.createElement('td');
                 const selectPerson = document.createElement('select');
                 selectPerson.className = 'person-select';
+                // 綁定變更事件，處理重複選取邏輯
+                selectPerson.addEventListener('change', updateAvailablePeople);
+
                 people.forEach(p => {
                     const opt = document.createElement('option');
                     opt.value = p;
@@ -315,7 +368,7 @@
                 inputRemark.className = 'remark-input';
                 inputRemark.setAttribute('list', 'remarkOptions'); // 連結到 datalist
                 
-                // 根據圖片，預填一些範例 (僅作視覺參考，實際可由使用者修改)
+                // 預填邏輯
                 if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
                     inputRemark.value = "理慧通知傳香";
                 }
@@ -333,9 +386,37 @@
             });
         }
 
+        // 處理人員重複選擇的邏輯
+        function updateAvailablePeople() {
+            const allSelects = document.querySelectorAll('.person-select');
+            
+            // 收集所有「已經被選走」的值 (去除空白選項)
+            const selectedValues = Array.from(allSelects)
+                .map(s => s.value)
+                .filter(v => v !== "");
+
+            // 遍歷所有選單，更新每個選項的 disabled 狀態
+            allSelects.forEach(select => {
+                const currentValue = select.value;
+                const options = select.options;
+
+                for (let i = 0; i < options.length; i++) {
+                    const opt = options[i];
+                    // 如果這個選項的值在 selectedValues 裡，且不是「目前這個選單選中的值」，就禁用
+                    if (opt.value !== "" && selectedValues.includes(opt.value) && opt.value !== currentValue) {
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                    }
+                }
+            });
+        }
+
         // 複製功能
         function copyContent() {
             const location = document.getElementById('locationSelect').value;
+            const notes = document.getElementById('notesArea').value; // 取得注意事項
+
             let resultText = `法會地點：${location}\n\n`;
             resultText += `位置/神佛 | 指派 | 香 | 備註\n`;
             resultText += `-----------------------------------\n`;
@@ -348,16 +429,15 @@
                 const incense = row.querySelector('.incense-select').value;
                 const remark = row.querySelector('.remark-input').value;
 
-                // 只有當有選擇人員或有輸入備註時才複製，或者您可以選擇全部複製
-                // 這裡設定為：只要有選人，或者有選香，或者有備註，就複製該行
-                // 如果整行除了神佛名都是空的，也可以複製，看需求。目前設定為全部複製。
-                
-                // 簡單格式化
                 resultText += `${name} | ${person} | ${incense} | ${remark}\n`;
             });
 
+            // 加入注意事項
+            if (notes.trim() !== "") {
+                resultText += `\n[注意事項]\n${notes}\n`;
+            }
+
             // 複製到剪貼簿
-            // 由於在 iframe 或某些環境下 navigator.clipboard 可能受限，使用 textarea fallback
             const textArea = document.createElement("textarea");
             textArea.value = resultText;
             document.body.appendChild(textArea);
@@ -372,7 +452,6 @@
                 }
             } catch (err) {
                 console.error('複製失敗', err);
-                // 嘗試現代 API
                 navigator.clipboard.writeText(resultText).then(() => {
                     showToast();
                 }).catch(err => {
