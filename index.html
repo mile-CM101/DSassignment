@@ -466,7 +466,7 @@
                 tdName.textContent = deity;
                 tr.appendChild(tdName);
 
-                // 2. 指派人員 (改為 input + datalist)
+                // 2. 奉香人員 (改為 input + datalist)
                 const tdPerson = document.createElement('td');
                 const inputPerson = document.createElement('input');
                 inputPerson.type = 'text';
@@ -558,7 +558,7 @@
             const notes = document.getElementById('notesArea').value;
 
             let resultText = `法會地點：${location}\n\n`;
-            resultText += `位置/神佛 | 指派 | 炷香 | 備註\n`;
+            resultText += `位置/神佛 | 奉香 | 炷香 | 備註\n`;
             resultText += `-----------------------------------\n`;
 
             const rows = document.querySelectorAll('#rosterBody tr');
@@ -631,4 +631,5 @@
     </script>
 </body>
 </html>
+
 
