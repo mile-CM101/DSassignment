@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法會執事表</title>
+    <style>
+        :root {
+            --main-bg-color: #00FFFF; /* 圖片中的亮青色 */
+            --border-color: #000000;
+            --header-text-color: #FFD700; /* 圖片中的金黃色字體 */
+            --header-text-stroke: #FF8C00; /* 字體邊框感 */
+            --btn-bg: #FFA500;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: #f0f0f0;
+            /* 模擬背景模糊氛圍 */
+            background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url('https://images.unsplash.com/photo-1542042956-655455648839?q=80&w=2000&auto=format&fit=crop'); 
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        /* 頂部控制區 */
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .location-box {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--border-color);
+            padding: 5px;
+            display: inline-block;
+        }
+
+        .location-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .location-select {
+            font-size: 1.1rem;
+            padding: 5px;
+            width: 200px;
+            border: 1px solid #999;
+        }
+
+        /* 複製按鈕 */
+        .copy-btn {
+            background-color: var(--btn-bg);
+            border: 3px solid var(--border-color);
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 5px 15px;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+
+        .copy-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        /* 主要表格區域 */
+        .roster-container {
+            background-color: var(--main-bg-color);
+            border: 4px solid var(--border-color);
+            padding: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 2px;
+        }
+
+        thead th {
+            font-size: 1.8rem;
+            color: var(--header-text-stroke); 
+            text-shadow: 1px 1px 0px var(--header-text-color);
+            text-align: left;
+            padding: 5px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        
+        /* 模擬圖片中 header 的特殊排版 */
+        .header-pos-deity { width: 40%; }
+        .header-assign { width: 15%; }
+        .header-incense { width: 15%; }
+        .header-note { width: 30%; }
+
+        tbody tr {
+            height: 40px;
+        }
+
+        tbody td {
+            font-size: 1.1rem;
+            color: #000;
+            font-weight: bold;
+            vertical-align: middle;
+            padding: 2px;
+        }
+
+        /* 欄位樣式 */
+        .deity-name {
+            padding-left: 5px;
+            white-space: nowrap;
+        }
+
+        select, input {
+            width: 100%;
+            height: 32px;
+            font-size: 1rem;
+            border: 1px solid #000;
+            background-color: white;
+            box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+        }
+        
+        select {
+            text-align: center;
+            text-align-last: center;
+        }
+
+        /* 響應式調整 */
+        @media (max-width: 768px) {
+            .top-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .copy-btn {
+                width: 100%;
+            }
+            thead th {
+                font-size: 1.2rem;
+            }
+            tbody td {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 提示訊息 */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+        }
+
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 上方控制區 -->
+        <div class="top-controls">
+            <div class="location-box">
+                <label class="location-label">法會地點</label>
+                <select id="locationSelect" class="location-select">
+                    <option value="新店紫竹林寺" selected>新店紫竹林寺</option>
+                    <option value="其他地點">其他地點</option>
+                </select>
+            </div>
+            <button class="copy-btn" onclick="copyContent()">複製內容</button>
+        </div>
+
+        <!-- 主表格區 -->
+        <div class="roster-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="header-pos-deity">位置 &nbsp;&nbsp;&nbsp; 神佛</th>
+                        <th class="header-assign">指派</th>
+                        <th class="header-incense">香</th>
+                        <th class="header-note">備註</th>
+                    </tr>
+                </thead>
+                <tbody id="rosterBody">
+                    <!-- Javascript 將自動生成這裡的內容 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 複製成功提示 -->
+    <div id="toast">內容已複製到剪貼簿！</div>
+
+    <!-- 預設選項資料 -->
+    <datalist id="remarkOptions">
+        <option value="理慧傳香">
+        <option value="理慧通知傳香">
+        <option value="敬合傳香">
+        <option value="信永傳香">
+    </datalist>
+
+    <script>
+        // 資料定義
+        const deities = [
+            "1樓 內殿 大地藏皇佛",
+            "1樓 內殿 慈航佛母",
+            "1樓 內殿 天上聖母",
+            "1樓 內殿 冥聖",
+            "1樓 內殿 千手千眼",
+            "1樓 內殿 彌勒天皇",
+            "2樓 內殿 皇母",
+            "2樓 內殿 未來佛",
+            "2樓 內殿 嚴仁尊佛",
+            "2樓 內殿 無極五母",
+            "2樓 內殿 嚴慈尊佛",
+            "2樓 內殿 嚴聖尊佛",
+            "3樓 內殿 八臂觀音",
+            "3樓 內殿 盤古尊佛",
+            "3樓 內殿 八大菩薩"
+        ];
+
+        // 下拉選單 1: 人員
+        const people = [
+            "", "歷生", "智法", "展賢", "聞真", 
+            "圓律", "宜誠", "立言", "易賢", 
+            "旻賢", "以聞", "躍智", "瑞仁", 
+            "意能", "樂禪", "明行", "理明", "一鳴"
+        ];
+
+        // 下拉選單 2: 香
+        const incenseTypes = ["", "3中", "1中", "2握香"];
+
+        // 初始化表格
+        function initTable() {
+            const tbody = document.getElementById('rosterBody');
+            
+            deities.forEach((deity, index) => {
+                const tr = document.createElement('tr');
+                
+                // 1. 神佛名稱欄位
+                const tdName = document.createElement('td');
+                tdName.className = 'deity-name';
+                tdName.textContent = deity;
+                tr.appendChild(tdName);
+
+                // 2. 指派人員下拉選單
+                const tdPerson = document.createElement('td');
+                const selectPerson = document.createElement('select');
+                selectPerson.className = 'person-select';
+                people.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    selectPerson.appendChild(opt);
+                });
+                tdPerson.appendChild(selectPerson);
+                tr.appendChild(tdPerson);
+
+                // 3. 香下拉選單
+                const tdIncense = document.createElement('td');
+                const selectIncense = document.createElement('select');
+                selectIncense.className = 'incense-select';
+                incenseTypes.forEach(i => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = i;
+                    selectIncense.appendChild(opt);
+                });
+                tdIncense.appendChild(selectIncense);
+                tr.appendChild(tdIncense);
+
+                // 4. 備註輸入欄位
+                const tdRemark = document.createElement('td');
+                const inputRemark = document.createElement('input');
+                inputRemark.type = 'text';
+                inputRemark.className = 'remark-input';
+                inputRemark.setAttribute('list', 'remarkOptions'); // 連結到 datalist
+                
+                // 根據圖片，預填一些範例 (僅作視覺參考，實際可由使用者修改)
+                if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
+                    inputRemark.value = "理慧通知傳香";
+                }
+                 if (deity.includes("皇母") || deity.includes("無極五母")) {
+                    inputRemark.value = "敬合傳香";
+                }
+                if (deity.includes("八大菩薩")) {
+                    inputRemark.value = "信永傳香";
+                }
+
+                tdRemark.appendChild(inputRemark);
+                tr.appendChild(tdRemark);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 複製功能
+        function copyContent() {
+            const location = document.getElementById('locationSelect').value;
+            let resultText = `法會地點：${location}\n\n`;
+            resultText += `位置/神佛 | 指派 | 香 | 備註\n`;
+            resultText += `-----------------------------------\n`;
+
+            const rows = document.querySelectorAll('#rosterBody tr');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.deity-name').textContent;
+                const person = row.querySelector('.person-select').value;
+                const incense = row.querySelector('.incense-select').value;
+                const remark = row.querySelector('.remark-input').value;
+
+                // 只有當有選擇人員或有輸入備註時才複製，或者您可以選擇全部複製
+                // 這裡設定為：只要有選人，或者有選香，或者有備註，就複製該行
+                // 如果整行除了神佛名都是空的，也可以複製，看需求。目前設定為全部複製。
+                
+                // 簡單格式化
+                resultText += `${name} | ${person} | ${incense} | ${remark}\n`;
+            });
+
+            // 複製到剪貼簿
+            // 由於在 iframe 或某些環境下 navigator.clipboard 可能受限，使用 textarea fallback
+            const textArea = document.createElement("textarea");
+            textArea.value = resultText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast();
+                } else {
+                    alert('複製失敗，請手動複製。');
+                }
+            } catch (err) {
+                console.error('複製失敗', err);
+                // 嘗試現代 API
+                navigator.clipboard.writeText(resultText).then(() => {
+                    showToast();
+                }).catch(err => {
+                    alert('瀏覽器不支援自動複製，請手動截圖或複製。');
+                });
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showToast() {
+            const x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        // 啟動
+        window.onload = initTable;
+    </script>
+</body>
+</html>
