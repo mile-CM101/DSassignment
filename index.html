@@ -32,7 +32,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('image/DS-BK.jpg'); 
+            background-image: url('image/DSBK.jpg'); 
             background-size: cover;
             background-position: center;
             opacity: 0.2; /* 設定背景透明度為 20% */
@@ -71,7 +71,7 @@
         .location-select {
             font-size: 1.1rem;
             padding: 5px;
-            width: 200px;
+            width: 250px;
             border: 1px solid #999;
         }
 
@@ -245,9 +245,10 @@
         <div class="top-controls">
             <div class="location-box">
                 <label class="location-label">法會地點</label>
-                <select id="locationSelect" class="location-select">
+                <select id="locationSelect" class="location-select" onchange="initTable()">
                     <option value="新店紫竹林寺" selected>新店紫竹林寺</option>
-                    <option value="其他地點">其他地點</option>
+                    <option value="玄皇寺法會">玄皇寺法會</option>
+                    <option value="大正金剛轉輪寺">大正金剛轉輪寺</option>
                 </select>
             </div>
             <button class="copy-btn" onclick="copyContent()">複製內容</button>
@@ -289,24 +290,43 @@
     </datalist>
 
     <script>
-        // 資料定義
-        const deities = [
-            "1樓 內殿 大地藏皇佛",
-            "1樓 內殿 慈航佛母",
-            "1樓 內殿 天上聖母",
-            "1樓 內殿 冥聖",
-            "1樓 內殿 千手千眼",
-            "1樓 內殿 彌勒天皇",
-            "2樓 內殿 皇母",
-            "2樓 內殿 未來佛",
-            "2樓 內殿 嚴仁尊佛",
-            "2樓 內殿 無極五母",
-            "2樓 內殿 嚴慈尊佛",
-            "2樓 內殿 嚴聖尊佛",
-            "3樓 內殿 八臂觀音",
-            "3樓 內殿 盤古尊佛",
-            "3樓 內殿 八大菩薩"
-        ];
+        // 資料定義：根據不同地點設定不同的神佛列表
+        const locationData = {
+            "新店紫竹林寺": [
+                "1樓 內殿 觀世音皇母",
+                "1樓 內殿 南無觀自在皇佛",
+                "1樓 內殿 彌勒妙法增菩薩",
+                "1樓 內殿 觀音三十三應身",
+                "1樓 外殿 月聖始祖",
+                "1樓 外殿 福德正神",
+                "2樓 內殿 未來佛"
+            ],
+            "玄皇寺法會": [
+                "1樓 內殿 大地藏皇佛",
+                "1樓 內殿 慈航佛母",
+                "1樓 內殿 天上聖母",
+                "1樓 內殿 冥聖",
+                "1樓 內殿 千手千眼",
+                "1樓 內殿 彌勒天皇",
+                "2樓 內殿 皇母",
+                "2樓 內殿 未來佛",
+                "2樓 內殿 嚴仁尊佛",
+                "2樓 內殿 無極五母",
+                "2樓 內殿 嚴慈尊佛",
+                "2樓 內殿 嚴聖尊佛",
+                "3樓 內殿 八臂觀音",
+                "3樓 內殿 盤古尊佛",
+                "3樓 內殿 八大菩薩"
+            ],
+            "大正金剛轉輪寺": [
+                "1樓 內殿 觀世音皇母",
+                "1樓 內殿 慈航佛母",
+                "1樓 內殿 天上聖母",
+                "1樓 內殿 彌勒天皇",
+                "1樓 內殿 盤古尊佛",
+                "1樓 內殿 嚴慈尊佛"
+            ]
+        };
 
         // 下拉選單 1: 人員
         const people = [
@@ -319,11 +339,19 @@
         // 下拉選單 2: 香
         const incenseTypes = ["", "3中", "1中", "2握香"];
 
-        // 初始化表格
+        // 初始化表格 (現在會根據選單狀態動態生成)
         function initTable() {
+            const locationSelect = document.getElementById('locationSelect');
+            const selectedLocation = locationSelect.value;
             const tbody = document.getElementById('rosterBody');
             
-            deities.forEach((deity, index) => {
+            // 清空目前的表格內容
+            tbody.innerHTML = '';
+
+            // 取得對應的神佛列表，若找不到則使用空陣列
+            const currentDeities = locationData[selectedLocation] || [];
+            
+            currentDeities.forEach((deity, index) => {
                 const tr = document.createElement('tr');
                 
                 // 1. 神佛名稱欄位
@@ -368,7 +396,7 @@
                 inputRemark.className = 'remark-input';
                 inputRemark.setAttribute('list', 'remarkOptions'); // 連結到 datalist
                 
-                // 預填邏輯
+                // 預填邏輯 (關鍵字匹配)
                 if (deity.includes("慈航佛母") || deity.includes("天上聖母")) {
                     inputRemark.value = "理慧通知傳香";
                 }
@@ -384,6 +412,9 @@
 
                 tbody.appendChild(tr);
             });
+            
+            // 表格重繪後，重新計算一次可用人員 (雖然此時都是空的，但為了保險起見)
+            updateAvailablePeople();
         }
 
         // 處理人員重複選擇的邏輯
